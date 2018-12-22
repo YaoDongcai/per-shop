@@ -1,0 +1,110 @@
+<style lang="css">
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/btn.wxss';
+  @import '../../zanui/cell.wxss';
+  .field__title--radius {
+    padding-bottom: 10px;
+  }
+  .zan-field__input {
+    margin-left:2px;
+  }
+  .address-add {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+</style>
+
+<template>
+  <view class="zan-panel">
+    <view class="zan-cell">
+      <view class="zan-cell_bd">
+        姓名:{{docker.docker.name}}
+        <view class="zan-cell__desc">
+          电话：{{docker.docker.phone}}
+        </view>
+      </view>
+    </view>
+    <view class="zan-cell">
+      <view class="zan-cell_bd">
+        邮件:{{docker.docker.email}}
+        <view class="zan-cell__desc">
+          详细描述：{{docker.docker.desc}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view @tap="success()"  class="address-add">
+    <button class="zan-btn zan-btn--large zan-btn--primary zan-btn--plain" style="width:90%;margin-left:5%;margin-bottom:10px;">同意</button>
+  </view>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+
+
+  export default class Success  extends wepy.page {
+    config = {
+      navigationBarTitleText: '接单人信息'
+    }
+    components = {
+
+    }
+    data = {
+      docker:null
+    }
+    methods = {
+        // 如果用户同意 那么就开始点击这个;
+      success() {
+        // 这个时候就需要把这个信息给这个人;
+        const self = this;
+        wx.showLoading({
+          title: '操作中',
+          mask: true
+        });
+        var id = self.docker.get('docker').get('publishItem').get('objectId');
+        var user = self.docker.get('docker').get('user');
+        const query = new AV.Query('Demand');
+        query.get(id).then(res=> {
+          var phone = res.get('phone');
+          var email = res.get('email');
+          var name = res.get('name');
+
+          var MessageList = AV.Object.extend('MessageList');
+          var messageList = new MessageList();
+          messageList.set('title','对接回复');
+          messageList.set('type','对接回复');
+          messageList.set('desc','发布人的信息如下，请联系' + '电话:' +phone + '邮箱:' + email + '姓名:' + name);
+          messageList.set('status',false);
+
+          messageList.set('user', user);
+          messageList.save().then(res=> {
+            wx.hideLoading();
+            wx.navigateBack();
+          }, error=> {
+            wx.hideLoading();
+          });
+        });
+      }
+    }
+    onShow() {
+
+    }
+    onLoad(options) {
+      const self = this;
+      const id = options.id;
+      let query= new AV.Query('MessageList');
+      // 按照时间排列
+      query.include('docker');
+      query.get(id).then(res=> {
+        self.docker = res;
+        console.log(res)
+        self.$apply();
+      }, error=> {
+        console.log(error)});
+    }
+  }
+</script>

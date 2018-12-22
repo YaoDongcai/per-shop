@@ -1,0 +1,167 @@
+<style>
+  @import '../../zanui/btn.wxss';
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/cell.wxss';
+  @import '../../zanui/icon.wxss';
+  @import '../../zanui/card.wxss';
+  @import '../../zanui/color.wxss';
+</style>
+
+<template>
+<!-- 上传身份证复印件的正反面-->
+  <view class="zan-panel">
+    <view class="zan-panel-title">
+      请选择上传身份证的正反面
+    </view>
+    <view class="zan-cell" @tap="choiseImageForPosition">
+        <view style="width:100%;color:white;height:100px; border-radius:5px;background-color:#999999;display:flex;align-items: center;justify-content: center;">
+          点我选择身份证正面
+        </view>
+    </view>
+    <!-- 正面即可-->
+    <image style="width:100%;" src="{{personalPositive}}" mode="aspectFit"></image>
+    <view class="zan-cell" @tap="choiseImageForNegative">
+      <view style="width:100%;color:white;height:100px; border-radius:5px;background-color:#999999;display:flex;align-items: center;justify-content: center;">
+        点我选择身份证反面
+      </view>
+    </view>
+    <view >
+
+      <!-- 反面图像-->
+      <image style="width:100%;" src="{{personalNegative}}" mode="aspectFit"></image>
+    </view>
+    <!--<view class="zan-cell" wx:if="{{personalImageArray.length >0}}">-->
+      <!--<view class="zan-btn zan-btn&#45;&#45;primary" style="width:100%;" @tap="uploadImage">上传</view>-->
+    <!--</view>-->
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+   import AV from '../../libs/av-weapp-min'
+  export default class Template  extends wepy.page {
+    config = {
+      navigationBarTitleText: '个人设置'
+    }
+    data = {
+      personalImageArray:[],
+      personalPositive: null,
+      personalNegative: null,
+    }
+    methods = {
+      uploadImage() {
+        // 上传图片;
+        wx.showToast({
+          title: '功能正在开发中',
+          duration: 2000
+        });
+
+        // new AV.File('file-name', {
+        //   blob: {
+        //     uri: tempFilePath,
+        //   },
+        // }).save().then(res=> {
+        //
+        // }) ;
+      },
+      choiseImageForNegative() {
+        // 选择图片
+        const self = this;
+        wx.chooseImage({
+          // 设置最多可以选择的图片张数，默认9,如果我们设置了多张,那么接收时//就不在是单个变量了,
+          count: 1,
+          sizeType: ['original', 'compressed'], // original 原图，compressed 压缩图，默认二者都有
+          sourceType: ['album', 'camera'], // album 从相册选图，camera 使用相机，默认二者都有
+          success: function(res){
+            // 获取成功,将获取到的地址赋值给临时变量
+            var tempFilePath = res.tempFilePaths[0];
+            wx.showLoading({
+              title: '上传中',
+            })
+            // 这个时候是图片的数组形式;
+            new AV.File('personal-negative', {
+              blob: {
+                uri: tempFilePath,
+              },
+            }).save().then(
+              // file => console.log(file.url())
+              function(file) {
+                // 上传成功后，将所上传的头像设置更新到页面<image>中
+                self.personalNegative = file.url();
+                self.$apply();
+                // 这个时候需要重新去选择一张图像;
+                let user = AV.User.current();
+                user.set('personalNegative', file.url());
+                user.save().then(res=> {
+                  wx.hideLoading();
+                  self.$apply();
+                });
+              }
+            ).catch(console.error);
+
+          },
+          fail: function(res) {
+            // fail
+          },
+          complete: function(res) {
+            // complete
+          }
+        })},
+      choiseImageForPosition() {
+        // 选择图片
+        const self = this;
+        wx.chooseImage({
+          // 设置最多可以选择的图片张数，默认9,如果我们设置了多张,那么接收时//就不在是单个变量了,
+          count: 1,
+          sizeType: ['original', 'compressed'], // original 原图，compressed 压缩图，默认二者都有
+          sourceType: ['album', 'camera'], // album 从相册选图，camera 使用相机，默认二者都有
+          success: function(res){
+            // 获取成功,将获取到的地址赋值给临时变量
+            var tempFilePath = res.tempFilePaths[0];
+            // 这个时候是图片的数组形式;
+            wx.showLoading({
+              title: '上传中',
+            })
+            new AV.File('personal-positive', {
+              blob: {
+                uri: tempFilePath,
+              },
+            }).save().then(
+              // file => console.log(file.url())
+              function(file) {
+                // 上传成功后，将所上传的头像设置更新到页面<image>中
+                self.personalPositive = file.url();
+                // 这个时候需要重新去选择一张图像;
+                let user = AV.User.current();
+                user.set('personalPositive', file.url());
+                user.save().then(res=> {
+                  wx.hideLoading();
+                  self.$apply();
+                });
+              }
+            ).catch(console.error);
+          },
+          fail: function(res) {
+            // fail
+          },
+          complete: function(res) {
+            // complete
+          }
+        })
+      }
+    }
+    onShow() {
+      // 获取图像的正反面;
+      const user = AV.User.current();
+      this.personalPositive = user.get('personalPositive');
+      this.personalNegative = user.get('personalNegative');
+      // if(this.personalNegative=='' || this.personalNegative==null) {
+      //
+      // }
+      this.$apply();
+    }
+    onLoad() {
+
+    }
+  }
+</script>

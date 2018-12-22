@@ -1,0 +1,531 @@
+<style>
+  page {
+    position: relative;
+    height: 100%;
+  }
+
+  /*省市区文本框*/
+  .area_select {
+    color: #808080;
+    width: 60%;
+  }
+
+  .poi {
+    font-size: 12px;
+  }
+
+  /*弹窗主体*/
+  .modal-content {
+    position: fixed;
+    bottom: -285px;
+    left: 0;
+    width: 100%;
+    height: 285px;
+    /*box-shadow: 10rpx 0 30rpx rgba(0,0,0,.9);*/
+    margin-top: 5px;
+    background: #fff;
+    z-index: 999;
+  }
+
+  /*遮罩层*/
+  .modal-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    opacity: .8;
+    z-index: 99;
+  }
+
+  /*弹窗头部*/
+  .modal-header {
+    padding: 4px 10px;
+    font-size: 16px;
+    color: #666;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    line-height: 30px;
+  }
+
+  /*所在地区字样*/
+  .modal-title {
+    text-align: center;
+    width: 100%;
+  }
+
+  /*关闭按钮*/
+  .modal-close {
+    width: 20px;
+    height: 20px;
+  }
+
+  .modal-body {
+    font-size: 14px;
+  }
+
+  /*每级地区标题*/
+  .viewpager-title {
+    padding: 0 10px;
+    /*color: #f03118;*/
+    line-height: 30px;
+  }
+
+  /*分隔线*/
+  .viewpager-divider {
+    width: 100%;
+    height: 1px;
+    background: #ccc;
+  }
+
+  /*左右滑动控件*/
+  .swiper-area {
+    height:220px;
+  }
+
+  /*地址列表ListView容器*/
+  .viewpager-listview {
+    padding-top: 5px;
+    height: 100%;
+  }
+
+  /*每行地址item项*/
+  .viewpager-listview view{
+    line-height: 30px;
+    padding: 0 10px;
+  }
+
+  /*高亮当前所选地区*/
+  .area-selected {
+    color: red;
+  }
+
+  /*初始隐藏*/
+  .hidden {
+    display: none;
+  }
+
+  /*运行时显示*/
+  .show {
+    display: block;
+  }
+
+  /*单元格*/
+  .cell {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items:center;
+    margin: 4px;
+    border-bottom: 1px solid #eee;
+    line-height: 28px;
+  }
+
+  .cell:last-child {
+    border-bottom: 0;
+  }
+
+  /*label显示字符*/
+  .cell text:first-child {
+    width: 50px;
+  }
+
+  /*请选择区域*/
+  .region {
+    width: 90%;
+  }
+
+  /*保存按钮*/
+  .save {
+    margin: 8px;
+  }
+</style>
+
+<template>
+  <form bindsubmit="formSubmit">
+    <view class="cell">
+      <text>区域</text><text @tap="cascadePopup" class="area_select">{{areaSelectedStr}}</text>
+      <!--<text bindtap="fetchPOI" class="poi">自动获取</text>-->
+    </view>
+    <view class="cell">
+      <text>地址</text><input name="detail" placeholder="请输入详情地址" value="{{address.detail}}" />
+    </view>
+    <view class="cell">
+      <text>姓名</text>
+      <input name="realname" placeholder="请输入收件人姓名" value="{{address.realname}}" />
+    </view>
+    <view class="cell">
+      <text>手机</text>
+      <input name="mobile" placeholder="请输入手机号码" value="{{address.mobile}}" type="number"/>
+    </view>
+    <button class="save" formType="submit" type="primary">保存</button>
+  </form>
+  <view class="modal">
+    <view class="modal-mask {{maskVisual}}" @tap="cascadeDismiss"></view>
+    <view animation="{{animationData}}" class="modal-content">
+      <view class="modal-header">
+        <text class="modal-title">所在地区</text>
+        <image src="/images/close.png" class="modal-close" @tap="cascadeDismiss" />
+      </view>
+      <view class="modal-body">
+
+        <text class="viewpager-title {{current == 0 ? 'area-selected' : ''}}" @tap="changeCurrent" data-current="0">{{provinceName}}</text>
+        <text class="viewpager-title {{current == 1 ? 'area-selected' : ''}}" @tap="changeCurrent" data-current="1">{{cityName}}</text>
+        <text class="viewpager-title {{current == 2 ? 'area-selected' : ''}}" @tap="changeCurrent" data-current="2">{{regionName}}</text>
+        <text class="viewpager-title {{current == 3 ? 'area-selected' : ''}}" @tap="changeCurrent" data-current="3">{{townName}}</text>
+
+        <view class="viewpager-divider"></view>
+        <swiper class="swiper-area" current="{{current}}" @change="currentChanged">
+          <block wx:if="{{province.length > 0}}">
+            <swiper-item>
+              <scroll-view scroll-y="true" class="viewpager-listview">
+                <view wx:for="{{province}}" wx:key="index"  @tap="provinceTapped({{index}})">
+                  <text wx:if="{{index == provinceIndex}}" class="area-selected">{{item}}</text>
+                  <text wx:else>{{item}}</text>
+                </view>
+              </scroll-view>
+            </swiper-item>
+          </block>
+          <block wx:if="{{city.length > 0}}">
+            <swiper-item>
+              <scroll-view scroll-y="true" class="viewpager-listview">
+                <view wx:for="{{city}}" wx:key="index"  @tap="cityTapped({{index}})">
+                  <text wx:if="{{index == cityIndex}}" class="area-selected">{{item}}</text>
+                  <text wx:else>{{item}}</text>
+                </view>
+              </scroll-view>
+            </swiper-item>
+          </block>
+          <block wx:if="{{region.length > 0}}">
+            <swiper-item>
+              <scroll-view scroll-y="true" class="viewpager-listview">
+                <view wx:for="{{region}}" wx:key="index"  @tap="regionTapped({{index}})">
+                  <text wx:if="{{index == regionIndex}}" class="area-selected">{{item}}</text>
+                  <text wx:else>{{item}}</text>
+                </view>
+              </scroll-view>
+            </swiper-item>
+          </block>
+          <block wx:if="{{town.length > 0}}">
+            <swiper-item>
+              <scroll-view scroll-y="true" class="viewpager-listview">
+                <view wx:for="{{town}}" wx:key="index"  bindtap="townTapped({{index}})">
+                  <text wx:if="{{index == townIndex}}" class="area-selected">{{item}}</text>
+                  <text wx:else>{{item}}</text>
+                </view>
+              </scroll-view>
+            </swiper-item>
+          </block>
+        </swiper>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+  export default class Add  extends wepy.page {
+    config = {
+      navigationBarTitleText: ''
+    }
+
+    data = {
+      current: 0,
+      province: [],
+      city: [],
+      region: [],
+      town: [],
+      provinceObjects: [],
+      cityObjects: [],
+      regionObjects: [],
+      townObjects: [],
+      areaSelectedStr: '请选择省市区',
+      maskVisual: 'hidden',
+      provinceName: '请选择'
+    }
+    methods = {
+      formSubmit: function(e) {
+        // user
+        var user = AV.User.current();
+        // detail
+        var detail = e.detail.value.detail;
+        // realname
+        var realname = e.detail.value.realname;
+        // mobile
+        var mobile = e.detail.value.mobile;
+        // 表单验证
+        if (this.data.areaSelectedStr == '请选择省市区') {
+          wx.showToast({
+            title: '请输入区域'
+          });
+          return;
+        }
+        if (detail == '') {
+          wx.showToast({
+            title: '请填写详情地址'
+          });
+          return;
+        }
+        if (realname == '') {
+          wx.showToast({
+            title: '请填写收件人'
+          });
+          return;
+        }
+        if(!(/^1[34578]\d{9}$/.test(mobile))){
+          wx.showToast({
+            title: '请填写正确手机号码'
+          });
+          return;
+        }
+        // save address to leanCloud
+        var address = new AV.Object('Address');
+        // 如果是编辑地址而不是新增
+        if (this.data.address != undefined) {
+          address = this.data.address;
+        }
+        // if isDefault address
+        address.set('isDefault', this.isDefault);
+        address.set('detail', detail);
+        // set province city region
+        address.set('province', this.data.province[this.data.provinceIndex]);
+        address.set('city', this.data.city[this.data.cityIndex]);
+        address.set('region', this.data.region[this.data.regionIndex]);
+        address.set('town', this.data.town[this.data.townIndex]);
+        address.set('user', user);
+        address.set('realname', realname);
+        address.set('mobile', mobile);
+        var that = this;
+        address.save().then(function (address) {
+          // that.setData('address', address);
+          wx.showToast({
+            title: '保存成功',
+            duration: 500
+          });
+          // 等待半秒，toast消失后返回上一页
+          setTimeout(function () {
+            wx.navigateBack();
+          }, 500);
+        }, function (error) {
+          console.log(error);
+        });
+      },
+      cascadeDismiss() {
+        this.animation.translateY(285).step();
+        this.animationData = this.animation.export(),
+        this.maskVisual = 'hidden'
+      },
+      provinceTapped(e) {
+        var that = this;
+        // 标识当前点击省份，记录其名称与主键id都依赖它
+        var index = e.currentTarget.dataset.index;
+        // current为1，使得页面向左滑动一页至市级列表
+        // provinceIndex是市区数据的标识
+
+          that.provinceName = this.data.province[index],
+          that.regionName='',
+          that.townName='',
+          that.provinceIndex=index,
+          that.cityIndex=-1,
+          that.regionIndex= -1,
+          that.townIndex=-1,
+          that.region= [],
+          that.town= []
+          that.$apply();
+
+        //provinceObjects是一个LeanCloud对象，通过遍历得到纯字符串数组
+        // getArea方法是访问网络请求数据，网络访问正常则一个回调function(area){}
+        this.getArea(this.provinceObjects[index].get('aid'), function (area) {
+          var array = [];
+          for (var i = 0; i < area.length; i++) {
+            array[i] = area[i].get('name');
+          }
+          // city就是wxml中渲染要用到的城市数据，cityObjects是LeanCloud对象，用于县级标识取值
+
+            that.cityName='请选择',
+            that.city=array,
+            that.cityObjects=area
+            that.current=1 ;
+          // 确保生成了数组数据再移动swiper
+          that.$apply();
+        });
+      },
+      cityTapped(e) {
+        // 标识当前点击县级，记录其名称与主键id都依赖它
+        var index = e.currentTarget.dataset.index;
+        // current为1，使得页面向左滑动一页至市级列表
+        // cityIndex是市区数据的标识
+        var that = this;
+          that.cityIndex = index,
+          that.regionIndex= -1,
+          that.townIndex=-1,
+          that.cityName= this.data.city[index],
+          that.regionName= '',
+          that.townName='',
+          that.town = []
+
+        that.$apply();
+        //cityObjects是一个LeanCloud对象，通过遍历得到纯字符串数组
+        // getArea方法是访问网络请求数据，网络访问正常则一个回调function(area){}
+        this.getArea(this.data.cityObjects[index].get('aid'), function (area) {
+          var array = [];
+          for (var i = 0; i < area.length; i++) {
+            array[i] = area[i].get('name');
+          }
+          // region就是wxml中渲染要用到的城市数据，regionObjects是LeanCloud对象，用于县级标识取值
+
+            that.regionName =  '请选择',
+            that.region =  array,
+            that.regionObjects = area
+            that.current = 2;
+          // 确保生成了数组数据再移动swiper
+            that.$apply();
+
+
+        });
+      },
+      regionTapped(e) {
+        // 标识当前点击镇级，记录其名称与主键id都依赖它
+        var index = e.currentTarget.dataset.index;
+        var that = this;
+        // current为1，使得页面向左滑动一页至市级列表
+        // regionIndex是县级数据的标识
+
+          that.regionIndex = index,
+          that.townIndex = -1,
+          that.regionName=this.data.region[index],
+          that.townName= ''
+
+
+        //townObjects是一个LeanCloud对象，通过遍历得到纯字符串数组
+        // getArea方法是访问网络请求数据，网络访问正常则一个回调function(area){}
+        this.getArea(this.data.regionObjects[index].get('aid'), function (area) {
+          // 假如没有镇一级了，关闭悬浮框，并显示地址
+          if (area.length == 0) {
+            var areaSelectedStr = that.provinceName + that.cityName + that.regionName;
+
+            that.areaSelectedStr = areaSelectedStr
+
+            that.cascadeDismiss();
+            return;
+          }
+          var array = [];
+          for (var i = 0; i < area.length; i++) {
+            array[i] = area[i].get('name');
+          }
+          // region就是wxml中渲染要用到的县级数据，regionObjects是LeanCloud对象，用于县级标识取值
+
+            that.townName = '请选择',
+            that.town = array,
+            that.townObjects = area
+            that.current = 3 ;
+          // 确保生成了数组数据再移动swiper
+           that.$apply();
+        });
+      },
+      townTapped(e) {
+        // 标识当前点击镇级，记录其名称与主键id都依赖它
+        var index = e.currentTarget.dataset.index;
+        // townIndex是镇级数据的标识
+        this.setData({
+          townIndex: index,
+          townName: this.data.town[index]
+        });
+        var areaSelectedStr = this.data.provinceName + this.data.cityName + this.data.regionName + this.data.townName;
+        this.setData({
+          areaSelectedStr: areaSelectedStr
+        });
+        this.cascadeDismiss();
+      },
+      currentChanged (e) {
+        // swiper滚动使得current值被动变化，用于高亮标记
+        var current = e.detail.current;
+        const that = this;
+          that.current = current
+        that.$apply();
+      },
+      changeCurrent(e) {
+        // 记录点击的标题所在的区级级别
+        var current = e.currentTarget.dataset.current;
+        const that = this;
+          that.current=current
+        that.$apply();
+      },
+      cascadePopup() {
+        var animation = wx.createAnimation({
+          duration: 500,
+          timingFunction: 'ease-in-out',
+        });
+        this.animation = animation;
+        animation.translateY(-285).step();
+
+        this.animationData = this.animation.export(),
+        this.maskVisual = 'show'
+        this.$apply();
+      },
+    }
+    loadAddress(options) {
+      var that = this;
+      if (options.objectId != undefined) {
+        // 第一个参数是 className，第二个参数是 objectId
+        var address = AV.Object.createWithoutData('Address', options.objectId);
+        address.fetch().then(function () {
+
+          that.address = address,
+           that.areaSelectedStr = address.get('province') + address.get('city') + address.get('region') + address.get('town')
+          that.$apply();
+        }, function (error) {
+          // 异常处理
+        });
+      }
+    }
+    setDefault() {
+      var that = this;
+      var user = AV.User.current();
+      // if user has no address, set the address for default
+      var query = new AV.Query('Address');
+      query.equalTo('user', user);
+      query.count().then(function (count) {
+        if (count <= 0) {
+          that.isDefault = true;
+        }
+      });
+    }
+    // 获取地区
+    getArea(pid, cb) {
+      var that = this;
+      // query area by pid
+      var query = new AV.Query('Area');
+      query.equalTo('pid', pid);
+      query.find().then(function (area) {
+        cb(area);
+      }, function (err) {
+
+      });
+    }
+    // 登录
+    onLoad(options) {
+      var that = this;
+      // load province
+      this.getArea(0, function (area) {
+        var array = [];
+        console.log(area)
+        for (var i = 0; i < area.length; i++) {
+          array[i] = area[i].get('name');
+        }
+        that.setData({
+          province: array,
+          provinceObjects: area
+        });
+      });
+      // if isDefault, address is empty
+      this.setDefault();
+      // this.cascadePopup();
+      this.loadAddress(options);
+    }
+  }
+</script>

@@ -1,0 +1,26 @@
+<style>
+
+</style>
+
+<template>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+//  import AV from '../libs/av-weapp-min'
+  export default class Template  extends wepy.page {
+    config = {
+      navigationBarTitleText: ''
+    }
+    data = {
+
+    }
+    methods = {
+
+    }
+    onLoad() {
+
+    }
+  }
+</script>

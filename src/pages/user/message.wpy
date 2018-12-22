@@ -1,0 +1,65 @@
+<style lang="css">
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/cell.wxss';
+  @import '../../zanui/icon.wxss';
+  .field__title--radius {
+    padding-bottom: 10px;
+  }
+</style>
+
+<template>
+  <!-- 表单填写-->
+  <view class="zan-panel">
+    <view class="zan-cell" @tap="toHref({{item}})" wx:for="{{messageList}}" wx:key="index">
+      <view class="zan-cell__bd">
+        {{item.title}}
+        <view class="zan-cell__desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+  export default class Template  extends wepy.page {
+    config = {
+      navigationBarTitleText: '消息中心'
+    }
+    data = {
+      messageList: [],
+    }
+    methods = {
+      toHref(item) {
+        // 开始跳转到同意接单的界面;
+        if(item.type == '收到对接') {
+          //可以跳转到对应的消息界面;
+          wx.navigateTo({
+            url:'../user/success?id=' + item.objectId
+            // url: '../../user/publish'
+          });
+        }
+      }
+    }
+    onShow() {
+      // 系统消息
+      const user = new AV.User.current();
+      const self = this;
+      const query = new AV.Query('MessageList');
+      query.equalTo('user', user);
+      query.find().then(res=> {
+        self.messageList = res;
+        self.$apply();
+        res.forEach(todo=> {
+          todo.set('status', true);
+        })
+        return AV.Object.saveAll(res);
+      });
+
+    }
+    onLoad() {
+        // 这个时候需要把当前的消息设置一下;
+
+    }
+  }
+</script>

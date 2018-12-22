@@ -1,0 +1,111 @@
+<style lang="less">
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+</style>
+
+<script>
+import wepy from 'wepy'
+import AV from './libs/av-weapp-min'
+import 'wepy-async-function'
+
+const appId = "QCDBQvj9dD5rpLhjRyMj4Qev-gzGzoHsz";
+const appKey = "MEVByG7vofAPIP95q5WfsuCm";
+
+AV.init({
+  appId: appId,
+  appKey: appKey,
+});
+
+export default class extends wepy.app {
+  config = {
+    pages: [
+      'pages/index/index',// 首页
+      'pages/goods/detail/detail',// 货物详情页面
+      "pages/category/category",// 我的种类
+      "pages/test/test",  // 种类设置 含有一级菜单和二级菜单
+      "pages/user/list", // 需求list 中心
+      "pages/user/desc", // 需求详情
+      "pages/user/publish", // 需求发布
+      "pages/user/demandList",// 需求管理列表
+      "pages/user/message", // 消息中心
+      "pages/cart/cart",//购物车页面
+      "pages/address/add",// 我的地址 增加界面
+      "pages/address/list",//我的地址 列表管理
+      "pages/member/index/index",// 我的管理页面
+      "pages/order/checkout/checkout", // 我的订单
+      "pages/order/list/list",// 我的订单列表
+      'pages/user/personal',// 上传身份证信息
+      'pages/user/orders',// 对接时候填写的信息
+      'pages/user/success', // 对接的时间成功的页面
+      'pages/user/notice',// 通知
+    ],
+    window: {
+      "navigationBarBackgroundColor": "#48c23d",
+      "navigationBarTitleText": "平台",
+      "navigationBarTextStyle":"white"
+    },
+    "tabBar":{
+      "selectedColor": "#3cc51f",
+      "list":[{
+        "pagePath":"pages/index/index",
+        "iconPath":"images/icon_home.png",
+        "selectedIconPath":"images/icon_home_selected.png",
+        "text":"首页"
+      },{
+        "pagePath":"pages/category/category",
+        "iconPath":"images/icon_cate.png",
+        "selectedIconPath":"images/icon_cate_selected.png",
+        "text":"分类"
+      },{
+        "pagePath":"pages/cart/cart",
+        "iconPath":"images/icon_cart.png",
+        "selectedIconPath":"images/icon_cart_selected.png",
+        "text":"购物车"
+      },{
+        "pagePath":"pages/member/index/index",
+        "iconPath":"images/icon_member.png",
+        "selectedIconPath":"images/icon_member_selected.png",
+        "text":"我"
+      }]
+    }
+  }
+
+  globalData = {
+    userInfo: null
+  }
+
+  constructor () {
+    super()
+    this.use('requestfix')
+  }
+
+  onLaunch() {
+    AV.User.loginWithWeapp().then(user => {
+      console.log(user.toJSON())
+    }).catch(error=> {
+      console.log(error)
+    });
+
+  }
+
+
+  getUserInfo(cb) {
+    const that = this
+    if (this.globalData.userInfo) {
+      return this.globalData.userInfo
+    }
+    wepy.getUserInfo({
+      success (res) {
+        that.globalData.userInfo = res.userInfo
+        cb && cb(res.userInfo)
+      }
+    })
+  }
+}
+</script>

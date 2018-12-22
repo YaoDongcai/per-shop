@@ -1,0 +1,76 @@
+<style lang="css">
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/btn.wxss';
+  @import '../../zanui/cell.wxss';
+  .field__title--radius {
+    padding-bottom: 10px;
+  }
+  .zan-field__input {
+    margin-left:2px;
+  }
+  .address-add {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+</style>
+
+<template>
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-cell_bd">
+          标题:{{demand.title}}
+          <view class="zan-cell__desc">
+            详细描述：{{demand.desc}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+  <view @tap="orders"  class="address-add">
+    <button class="zan-btn zan-btn--large zan-btn--primary zan-btn--plain" style="width:90%;margin-left:5%;margin-bottom:10px;">接单</button>
+  </view>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+
+
+  export default class Desc  extends wepy.page {
+    config = {
+      navigationBarTitleText: '需求详情'
+    }
+    components = {
+
+    }
+    data = {
+      demand:null
+    }
+    methods = {
+      orders() {
+        // 需要填写一些资料：
+        wx.navigateTo({
+          url:'../user/orders?id=' + this.demand.id
+          // url: '../../user/publish'
+        });
+      }
+    }
+    onShow() {
+
+    }
+    onLoad(options) {
+      const self = this;
+      const id = options.id;
+      let query= new AV.Query('Demand');
+      // 按照时间排列
+      query.get(id).then(res=> {
+        self.demand = res;
+        console.log(res)
+        self.$apply();
+      }, error=> {
+        console.log(error)});
+    }
+  }
+</script>

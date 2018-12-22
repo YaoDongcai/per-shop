@@ -1,0 +1,641 @@
+<style lang="css">
+  @import '../../zanui/btn.wxss';
+  /*外部容器*/
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  /*整体列表*/
+  .carts-list {
+    display: flex;
+    flex-direction: column;
+    padding-left: 40rpx;
+    margin-bottom: 110rpx;
+  }
+
+  /*每行单元格*/
+  .carts-item {
+    display: flex;
+    flex-direction: row;
+    height:150rpx;
+    /*width属性解决标题文字太短而缩略图偏移*/
+    width:100%;
+    border-bottom: 1px solid #eee;
+    padding: 30rpx 0;
+    margin-right: 40rpx;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    z-index: 99;
+  }
+
+  /*item与button的容器*/
+  .carts-container {
+    position: relative;
+    width: 100%;
+    height: 90px;
+  }
+
+  /*左部图片*/
+  .carts-image {
+    width:150rpx;
+    height:150rpx;
+  }
+
+
+  /*右部描述*/
+  .carts-text {
+    margin-left: 10rpx;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /*右上部分标题*/
+  .carts-title {
+    font-size: 28rpx;
+    color: #444;
+    line-height: 38rpx;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /*右下部分价格与数量*/
+  .carts-subtitle {
+    font-size: 25rpx;
+    color:darkgray;
+    padding: 0 20rpx;
+    display: flex;
+    flex-direction: row;
+    justify-content:space-between;
+  }
+
+  /*价格*/
+  .carts-price {
+    color: #f60;
+    font-size:14px;
+    line-height: 22px;
+  }
+
+  /*人民币符号*/
+  .carts-price:before, .select-and-amount text:last-child:before {
+    content: '￥';
+  }
+
+  /*商品加减按钮*/
+  /*stepper容器*/
+  .stepper {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    width: 58px;
+    height: 26px;
+    margin:0 auto;
+  }
+
+
+  /*加号与减号*/
+  .stepper text {
+    width: 19px;
+    line-height: 26px;
+    text-align: center;
+    float: left;
+  }
+
+  /*数值*/
+  .stepper input {
+    color: black;
+    float: left;
+    margin: 0 auto;
+    width: 30px;
+    height: 26px;
+    text-align: center;
+    font-size: 12px;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+  }
+
+  /*普通样式*/
+  .stepper .normal{
+    color: black;
+  }
+
+  /*禁用样式*/
+  .stepper .disabled{
+    color: #ccc;
+  }
+
+  /*复选框样式*/
+  .carts-list icon {
+    margin-top: 60rpx;
+    margin-right: 20rpx;
+  }
+
+  /*底部按钮*/
+  .carts-footer {
+    width: 100%;
+    height: 80rpx;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: fixed;
+    bottom: 0;
+    border-top: 1px solid #eee;
+    background: white;
+    z-index: 999;
+  }
+
+  .select-and-amount {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  /*复选框*/
+  .carts-footer icon {
+    margin-left: 20rpx;
+    display: block;
+  }
+
+  /*全选字样*/
+  .carts-footer text {
+    font-size: 30rpx;
+    margin-left: 8rpx;
+    /*line-height: 10rpx;*/
+    display: block;
+  }
+
+  /*立即结算按钮*/
+  .carts-footer .button {
+    line-height: 80rpx;
+    text-align: center;
+    width:220rpx;
+    height: 80rpx;
+    background-color: #f60;
+    color: white;
+    font-size: 36rpx;
+    border-radius: 0;
+    border: 0;
+  }
+
+  /*删除按钮*/
+  .carts-footer .delete {
+    height: 80rpx;
+    width: 200rpx;
+    text-align: right;
+    line-height: 80rpx;
+    color: #fc9326;
+  }
+
+  /*删除按钮*/
+  .delete-button {
+    width: 60px;
+    font-size: 16px;
+    height: 99%;
+    line-height: 90px;
+    border: 0;
+    border-radius: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
+  .delete-button:before {
+    border: 0;
+  }
+
+
+  .zan-loadmore--nodata .zan-loadmore__tips {
+    position:relative;
+    top:-11px;
+    background:#f9f9f9;
+    padding:0 6px;
+    z-index:1;
+
+  }
+  .zan-loadmore__tips {
+    display:inline-block;
+    vertical-align:middle;
+    height:20px;
+    line-height:20px;
+
+  }
+
+</style>
+
+<template>
+
+
+  <view class="container carts-list">
+    <view wx:for="{{carts}}" class="carts-container" wx:key="index" @tap="showGoods" data-object-id="{{item.goods.objectId}}">
+      <view class="carts-item" style="left: {{itemLefts[index]}}px;" data-index="{{index}}" bindtouchstart="touchStart" bindtouchmove="touchMove" bindtouchend="touchEnd">
+        <!-- 复选框图标 -->
+        <icon type="{{item.selected ? 'success_circle' : 'circle'}}" size="20" catchtap="bindCheckbox" data-index="{{index}}"/>
+        <view>
+          <!-- 缩略图 -->
+          <image class="carts-image" src="{{item.goods.avatar}}" mode="aspectFill"/>
+        </view>
+        <view class="carts-text">
+          <!-- 商品标题 -->
+          <text class="carts-title">{{item.goods.title}}</text>
+          <view class="carts-subtitle">
+            <!-- 价格 -->
+            <text class="carts-price">{{item.goods.price}}</text>
+            <!-- 数量加减 -->
+            <view>
+              <view class="stepper">
+                <!-- 减号 -->
+                <text class="{{minusStatuses[index]}}" data-index="{{index}}" catchtap="bindMinus">-</text>
+                <!-- 数值 -->
+
+                <text class="normal">{{item.quantity}}</text>
+                <!--<input type="number" data-index="{{index}}" catchchange="bindManual" catchtap="bindManualTapped" value="{{item.quantity}}" />-->
+                <!-- 加号 -->
+                <text class="normal" data-index="{{index}}" catchtap="bindPlus">+</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <button type="warn" class="delete-button" catchtap="delete" data-object-id="{{item.objectId}}">删除</button>
+    </view>
+  </view>
+
+  <view wx:if="{{hasData}}" class="zan-loadmore zan-loadmore--nodata">
+    <!--<view class="zan-loadmore__tips">暂无数据</view>-->
+    <view class="zan-loadmore__tips">
+      <button @tap="goHome" class="zan-btn zan-btn--warn zan-btn--small zan-btn-plain">随便逛逛</button>
+    </view>
+  </view>
+
+  <block wx:if="{{!hasData}}" >
+    <view class="carts-footer" >
+      <view class="select-and-amount" @tap="bindSelectAll">
+        <icon type="{{selectedAllStatus ? 'success_circle' : 'circle'}}" size="18"/>
+        <text>全选</text>
+        <text>{{total}}</text>
+      </view>
+      <view class="button" @tap="bindCheckout">立即结算</view>
+    </view>
+  </block>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+  import zanLoadMore from '../../components/zan-loadmore'
+  export default class Cart  extends wepy.page {
+    config = {
+      navigationBarTitleText: '购物车'
+    }
+    components = {
+      zanLoadmore: zanLoadMore
+    }
+    data = {
+      carts: [],
+      minusStatuses: [],
+      selectedAllStatus: false,
+      total: '',
+      startX: 0,
+      itemLefts: [],
+
+      hasData: false,
+    }
+    calcIds() {
+      // 遍历取出已勾选的cid
+      // var buys = [];
+      var cartIds = [];
+      for (var i = 0; i < this.carts.length; i++) {
+        if (this.carts[i].get('selected')) {
+          // 移动到Buy对象里去
+          // cartIds += ',';
+          cartIds.push(this.carts[i].get('objectId'));
+        }
+      }
+      if (cartIds.length <= 0) {
+        wx.showToast({
+          title: '请勾选商品',
+          icon: 'success',
+          duration: 1000
+        })
+
+      }
+      return cartIds;
+    }
+    methods = {
+      // 去全部分类寻找数据
+      goHome() {
+        wx.switchTab({
+          url: "../category/category"
+        });
+      },
+      bindCheckout() {
+        var cartIds = this.calcIds();
+        if(cartIds.length >0) {
+          cartIds = cartIds.join(',');
+          wx.navigateTo({
+            url: '../../../../order/checkout/checkout?cartIds=' + cartIds + '&amount=' + this.total
+          });
+        }
+        else {
+          wx.showToast({
+            title: '物品为空',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      },
+      bindMinus: function(e) {
+        const self = this;
+        // loading提示
+        wx.showLoading({
+          title: '操作中',
+          mask: true
+        });
+        var index = parseInt(e.currentTarget.dataset.index);
+        var num = self.carts[index].get('quantity');
+        // 如果只有1件了，就不允许再减了
+
+        if (num > 1) {
+          num--;
+        }
+
+        // 只有大于一件的时候，才能normal状态，否则disable状态
+        var minusStatus = num <= 1 ? 'disabled' : 'normal';
+        // 购物车数据
+        var carts = self.carts;
+        carts[index].set('quantity', num);
+        console.log(carts[index].get('quantity'))
+        // 按钮可用状态
+        var minusStatuses = self.minusStatuses;
+        minusStatuses[index] = minusStatus;
+        // 将数值与状态写回
+        self.setData({
+          carts: carts,
+          minusStatuses: minusStatuses
+        });
+//        self.carts =  carts,
+//        self.minusStatuses = minusStatuses
+
+        // update database
+        carts[index].save().then(function (res) {
+          self.$apply();
+          console.log(res)
+          wx.hideLoading();
+        });
+
+        this.sum();
+
+      },
+      bindPlus: function(e) {
+        const self = this;
+        wx.showLoading({
+          title: '操作中',
+          mask: true
+        });
+        var index = parseInt(e.currentTarget.dataset.index);
+        var num = self.carts[index].get('quantity');
+        // 自增
+        num++;
+
+        // 购物车数据
+        var carts = self.carts;
+
+        carts[index].set('quantity', num);
+        console.log(carts[index].get('quantity'))
+        // 按钮可用状态
+        // 将数值与状态写回
+        self.setData({
+          carts: carts,
+        });
+        // update database
+        carts[index].save().then(function () {
+          self.$apply();
+          wx.hideLoading();
+        });
+
+        this.sum();
+
+      },
+      bindManual: function(e) {
+        console.log('bindManual')
+        const self = this;
+        wx.showLoading({
+          title: '操作中',
+          mask: true
+        });
+        var index = parseInt(e.currentTarget.dataset.index);
+        var carts = self.carts;
+        var num = parseInt(e.detail.value);
+
+        console.log(carts[index])
+        carts[index].set('quantity', num);
+        // 将数值与状态写回
+
+        self.carts = carts
+        console.log(carts)
+        carts[index].save().then(function () {
+          wx.hideLoading();
+        });
+        self.$apply();
+        this.sum();
+
+      },
+      bindManualTapped: function() {
+        // 什么都不做，只为打断跳转
+        console.log('bindManualTapped')
+      },
+      bindCheckbox: function(e) {
+        const that = this;
+        wx.showLoading({
+          title: '操作中',
+          mask: true
+        });
+        /*绑定点击事件，将checkbox样式改变为选中与非选中*/
+        //拿到下标值，以在carts作遍历指示用
+        var index = parseInt(e.currentTarget.dataset.index);
+        //原始的icon状态
+        var selected = that.carts[index].get('selected');
+        var carts = that.carts;
+        // 对勾选状态取反
+        carts[index].set('selected', !selected);
+        // 写回经点击修改后的数组
+        that.setData({
+          carts:carts
+        });
+//        that.carts = carts;
+
+        // update database
+        carts[index].save().then(function () {
+          wx.hideLoading();
+        });
+        this.sum();
+      },
+      bindSelectAll: function() {
+        wx.showLoading({
+          title: '操作中',
+          mask: true
+        });
+        // 环境中目前已选状态
+        var selectedAllStatus = this.data.selectedAllStatus;
+        // 取反操作
+        selectedAllStatus = !selectedAllStatus;
+        // 购物车数据，关键是处理selected值
+        var carts = this.data.carts;
+        // 遍历
+        for (var i = 0; i < carts.length; i++) {
+          carts[i].set('selected', selectedAllStatus);
+          // update selected status to db
+        }
+        AV.Object.saveAll(carts).then(function (objects) {
+          wx.hideLoading();
+        }, function (error) {
+          // 异常处理
+        });
+        this.setData({
+          selectedAllStatus: selectedAllStatus,
+          carts: carts,
+        });
+        this.sum();
+
+      },
+
+      delete: function (e) {
+        var that = this;
+        // 购物车单个删除
+        var objectId = e.currentTarget.dataset.objectId;
+        console.log(objectId);
+        wx.showModal({
+          title: '提示',
+          content: '确认要删除吗',
+          success: function(res) {
+            if (res.confirm) {
+              // 从网络上将它删除
+              var cart = AV.Object.createWithoutData('Cart', objectId);
+              cart.destroy().then(function () {
+                // 成功
+                wx.showToast({
+                  title: '删除成功',
+                  icon: 'success',
+                  duration: 1000
+                });
+                that.reloadData();
+                that.setData({
+                  itemLefts: []
+                });
+              }, function (error) {
+                // 异常处理
+              });
+            }
+          }
+        })
+      },
+
+      touchStart (e) {
+        const that = this;
+        var startX = e.touches[0].clientX;
+
+        that.startX=startX,
+        that.itemLefts = []
+        that.$apply();
+      },
+      touchMove (e) {
+        const that = this;
+        var index = e.currentTarget.dataset.index;
+        var movedX = e.touches[0].clientX;
+        var distance = that.startX - movedX;
+        var itemLefts = that.itemLefts;
+        itemLefts[index] = -distance;
+
+        that.itemLefts = itemLefts;
+        that.$apply();
+
+      },
+      touchEnd (e) {
+        const that = this;
+        var index = e.currentTarget.dataset.index;
+        var endX = e.changedTouches[0].clientX;
+        var distance = that.startX - endX;
+        // button width is 60
+        var buttonWidth = 60;
+        if (distance <= 0) {
+          distance = 0;
+        } else {
+          if (distance >= buttonWidth) {
+            distance = buttonWidth;
+          } else if (distance >= buttonWidth / 2){
+            distance = buttonWidth;
+          } else {
+            distance = 0;
+          }
+        }
+
+        var itemLefts = that.itemLefts;
+        itemLefts[index] = -distance;
+
+        that.itemLefts = itemLefts
+
+      },
+    }
+    reloadData() {
+      // auto login
+      var that = this;
+      var user = AV.User.current();
+      var query = new AV.Query('Cart');
+      var minusStatuses = [];
+      query.equalTo('user',user);
+      query.include('goods');
+      query.find().then(function (carts) {
+        for(var i = 0; i < carts.length; i++){
+          minusStatuses[i] = carts[i].get('quantity') <= 1 ? 'disabled' : 'normal';
+        }
+        if(carts.length == 0) {
+          that.hasData = true;
+        }else {
+          that.hasData = false;
+        }
+        that.carts=carts,
+        that.minusStatuses= minusStatuses
+        that.$apply();
+          // sum
+        that.sum();
+      });
+    }
+    sum() {
+      const that = this;
+      var carts = that.carts;
+      // 计算总金额
+      var total = 0;
+      for (var i = 0; i < carts.length; i++) {
+        if (carts[i].get('selected')) {
+          console.log('quantity' + carts[i].get('quantity'));
+          total += carts[i].get('quantity') * carts[i].get('goods').get('price');
+        }
+      }
+      total = total.toFixed(2);
+      // 写回经点击修改后的数组
+
+      that.carts = carts,
+      that.total = total;
+      that.$apply();
+
+    }
+    onShow() {
+      console.log('onshow')
+      this.reloadData();
+    }
+    onLoad() {
+
+    }
+
+  }
+</script>

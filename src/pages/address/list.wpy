@@ -1,0 +1,278 @@
+<style lang="css">
+  @import '../../zanui/btn.wxss';
+  @import '../../zanui/icon.wxss';
+  /*page background*/
+  page {
+    background: white;
+  }
+
+  /*that means a record*/
+  .item {
+    margin-bottom: 20rpx;
+    background: #fff;
+    padding: 20rpx;
+  }
+  /*姓名与手机号码*/
+  .item .header {
+    font-size: 36rpx;
+    color: #333;
+    line-height: 72rpx;
+  }
+
+  .item .header text {
+    margin-right: 40rpx;
+  }
+
+  .item .summary {
+    color: #999;
+    font-size: 32rpx;
+    line-height: 60rpx;
+  }
+
+  .item .footer {
+    border-top: 1px solid #ccc;
+    font-size: 30rpx;
+    color: #999;
+    padding-left: 10rpx;
+    padding-top: 10rpx;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  /*设为默认地址*/
+  .set-default {
+    display: flex;
+    align-items: center;
+  }
+
+  .set-default text {
+    margin-left: 10rpx;
+  }
+
+  /*编辑与删除操作*/
+  .item .footer .operation {
+    width: 280rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item .footer .operation .container {
+    display: flex;
+    align-items: center;
+  }
+
+  .item .footer .operation .container image {
+    width: 60rpx;
+    height: 60rpx;
+  }
+
+  .item .footer .operation .container text {
+    margin-left: 10rpx;
+  }
+
+  /*地址列表包装容器*/
+  .address-list {
+    margin-bottom: 56px;
+  }
+
+  /*添加地址按钮*/
+  .address-add {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+
+  .zan-loadmore--nodata .zan-loadmore__tips {
+    position:relative;
+    top:-11px;
+    text-align:center;
+    background:#f9f9f9;
+    padding:0 6px;
+    z-index:1;
+  }
+  .zan-loadmore__tips {
+    display:inline-block;
+    vertical-align:middle;
+    height:20px;
+    line-height:20px;
+
+  }
+</style>
+
+<template>
+
+  <!-- 提醒用户的数据 当前暂无数据 -->
+
+  <view wx:if="{{addressObjects.length == 0}}" class="zan-loadmore zan-loadmore--nodata" style="color:#e5e5e5;text-align: center;margin-top:60rpx;font-size:30rpx;">
+    <!--<view class="zan-loadmore__tips">暂无数据</view>-->
+    <view class="zan-loadmore__tips" style="background-color:white;">
+      暂无数据
+    </view>
+  </view>
+
+  <view class="address-list">
+    <view class="item" wx:for="{{addressObjects}}" wx:key="">
+      <!-- first row -->
+      <view class="header">
+        <text class="realname">{{item.userName}}</text>
+        <text class="mobile">{{item.telNumber}}</text>
+      </view>
+      <!-- second row -->
+      <view class="summary">{{item.provinceName}}{{item.cityName}}{{item.detailInfo}}</view>
+      <!-- third row -->
+      <view class="footer">
+        <!-- is default switch -->
+        <view class="set-default"  @tap="setDefault({{index}})">
+          <!-- circle or success type -->
+          <icon type="{{item.isDefault == true ? 'success_circle' : 'circle'}}"/>
+          <text>默认地址</text>
+        </view>
+        <!-- edit and delete button -->
+        <view class="operation" @tap="delete({{index}})">
+          <view class="zan-icon zan-icon-delete"  style="color: #ff4343;font-size: 45rpx;"></view>
+          <text style="margin-left:5px;">删除</text>
+          <!--<view class="container" @tap="delete({{index}})"><image src="../../../images/icon_delete.png" /></view>-->
+        </view>
+      </view>
+    </view>
+  </view>
+  <view @tap="add"  class="address-add">
+    <button class="zan-btn zan-btn--large zan-btn--primary zan-btn--plain" style="width:90%;margin-left:5%;margin-bottom:10px;">添加地址</button>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+  export default class List  extends wepy.page {
+    config = {
+      navigationBarTitleText: '地址管理'
+    }
+    data = {
+      addressObjects:[]
+    }
+    loadData() {
+      // 加载网络数据，获取地址列表
+      var that = this;
+      var query = new AV.Query('WechatAddress');
+      query.equalTo('user', AV.User.current());
+      query.find().then(function (addressObjects) {
+        that.addressObjects = addressObjects;
+        that.$apply();
+      });
+    }
+    // 拉取地址列表
+    onShow() {
+      this.loadData();
+    }
+    methods = {
+      setDefault(mindex) {
+        // 设置为默认地址
+        var that = this;
+        // 取得下标
+        var index = parseInt(mindex);
+        // 遍历所有地址对象设为非默认
+        var addressObjects = that.addressObjects;
+        for (var i = 0; i < addressObjects.length; i++) {
+          // 判断是否为当前地址，是则传true
+          addressObjects[i].set('isDefault', i == index)
+
+        }
+
+        // 提交网络更新该用户所有的地址
+        AV.Object.saveAll(addressObjects).then(function (addressObjects) {
+          // 成功同时更新本地数据源
+          // 设置成功提示
+          wx.showToast({
+            title: '设置成功',
+            icon: 'success',
+            duration: 2000
+          });
+          that.setData({
+            addressObjects: addressObjects
+          });
+//          that.$apply();
+        }, function (error) {
+          // 异常处理
+        });
+      },
+      edit(e) {
+        var that = this;
+        // 取得下标
+        var index = parseInt(e.currentTarget.dataset.index);
+        // 取出id值
+        var objectId = this.data.addressObjects[index].get('objectId');
+        wx.navigateTo({
+          url: '../add?objectId='+objectId
+        });
+      },
+      delete(mindex) {
+        var that = this;
+        // 取得下标
+        var index = parseInt(mindex);
+        // 找到当前地址AVObject对象
+        var address = that.addressObjects[index];
+        // 给出确认提示框
+        wx.showModal({
+          title: '确认',
+          content: '要删除这个地址吗？',
+          success: function(res) {
+            if (res.confirm) {
+              // 真正删除对象
+              address.destroy().then(function (success) {
+                // 删除成功提示
+                wx.showToast({
+                  title: '删除成功',
+                  icon: 'success',
+                  duration: 2000
+                });
+                // 重新加载数据
+                that.loadData();
+              }, function (error) {
+
+              });
+            }
+          }
+        })
+
+      },
+      add() {
+        const that = this;
+        wx.chooseAddress({
+          success: function (res) {
+            // 这个时候需要添加当前的数据来;
+
+            var address = new AV.Object('WechatAddress');
+            var user = AV.User.current();
+            // 新增一条数据
+            address.set('userName',res.userName)
+            address.set('postalCode',res.postalCode)
+            address.set('provinceName',res.provinceName)
+            address.set('cityName',res.cityName)
+            address.set('countyName',res.countyName)
+            address.set('detailInfo',res.detailInfo)
+            address.set('nationalCode',res.nationalCode)
+            address.set('telNumber',res.telNumber)
+            address.set('user', user);
+
+            address.save().then(res=> {
+              console.log(res);
+              that.loadData();
+            },error=> {
+              console.log(error)
+            });
+          }
+        });
+//        wx.navigateTo({
+//          url: '/pages/address/add'
+//        });
+      },
+
+    }
+    onLoad() {
+
+    }
+  }
+</script>

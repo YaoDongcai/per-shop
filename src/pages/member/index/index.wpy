@@ -1,0 +1,351 @@
+<style>
+  /*个人中心*/
+  @import '../../../zanui/panel.wxss';
+  @import '../../../zanui/cell.wxss';
+  @import '../../../zanui/badge.wxss';
+  @import '../../../zanui/icon.wxss';
+  page {
+    background: white;
+  }
+
+  /*user info*/
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 250rpx;
+    background: white;
+  }
+
+  .userinfo-avatar {
+    width: 128rpx;
+    height: 128rpx;
+    margin: 20rpx;
+    border-radius: 50%;
+  }
+
+  .userinfo-nickname {
+    color: #333;
+  }
+
+  /*menu list*/
+  .tableviewcell {
+    padding: 20rpx 40rpx;
+    border-bottom: 1rpx solid #ddd;
+    color: #666;
+    background: white;
+    display: flex;
+    align-items: center;
+  }
+
+  /*icon*/
+  .tableviewcell image {
+    width: 60rpx;
+    height: 60rpx;
+  }
+
+  /*text*/
+  .tableviewcell text {
+    font-size: 16px;
+    margin-left: 10px;
+  }
+
+  /*button*/
+  .logout {
+    margin: 30rpx;
+  }
+
+  /*order*/
+  .order-area {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    margin: 20rpx 0;
+    padding: 20rpx 0;
+  }
+
+  .order {
+    width: 33.3%;
+    text-align: center;
+  }
+
+  .order image {
+    width: 90rpx;
+    height: 90rpx;
+  }
+
+  .order text{
+    display: block;
+    font-size: 30rpx;
+    color: #333;
+  }
+
+  .icon-wrap {
+    height: 60px;
+    width:25%;
+    float: left;
+    text-align: center;
+  }
+  .icon-classname {
+    color: #000000;
+    font-size: 10px;
+  }
+  .zan-icon {
+    font-size: 24px;
+    margin: 5px;
+  }
+  .zan-panel {
+    margin-top:0;
+    border-top:none;
+  }
+  .zan-badge__count {
+    left:40px;
+
+  }
+</style>
+
+<template>
+
+  <!-- 列表表示各个模块-->
+  <view class="zan-panel">
+    <view class="userinfo">
+      <image class="userinfo-avatar" src="{{userInfo.avatarUrl ? userInfo.avatarUrl : '/images/logo.png'}}" background-size="cover"></image>
+      <text class="userinfo-nickname">{{userInfo.nickName ? userInfo.nickName : '未登录'}}</text>
+    </view>
+  </view>
+  <!-- 付款-->
+  <view class="zan-panel">
+    <view class="zan-row">
+
+      <view class="zan-col zan-col-6">
+        <view class="icon-wrap" @tap="navigateToOrder('0')">
+          <view class="zan-icon zan-icon-pending-payment"  style="color: #000000;"></view>
+          <view class="icon-classname">待付款</view>
+        </view>
+      </view>
+      <view class="zan-col zan-col-6" >
+        <view class="icon-wrap" @tap="navigateToOrder('1')">
+          <view class="zan-icon zan-icon-pending-deliver"  style="color: #000000;"></view>
+          <view class="icon-classname">待发货</view>
+        </view>
+      </view>
+      <view class="zan-col zan-col-6">
+        <view class="icon-wrap" @tap="navigateToOrder('2')">
+          <view class="zan-icon zan-icon-logistics"  style="color: #000000;"></view>
+          <view class="icon-classname">已发货</view>
+        </view>
+      </view>
+
+      <view class="zan-col zan-col-6">
+        <view class="icon-wrap" @tap="navigateToOrder('3')">
+          <view class="zan-icon zan-icon-passed"  style="color: #000000;"></view>
+          <view class="icon-classname">已完成</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="zan-panel">
+
+    <!--<view class="zan-cell zan-cell&#45;&#45;access" @tap="navigateToPublish">-->
+      <!--<view class="zan-cell__bd">我的需求</view>-->
+      <!--<view class="zan-cell__ft"></view>-->
+    <!--</view>-->
+    <!--<view class="zan-cell zan-cell&#45;&#45;access" >-->
+      <!--<view class="zan-cell__bd">租赁服务</view>-->
+      <!--<view class="zan-cell__ft"></view>-->
+    <!--</view>-->
+    <!--<view class="zan-cell zan-cell&#45;&#45;access" @tap="navigateToMessageHistory">-->
+      <!--<view class=" zan-badge" wx:if="{{messageCount !=0}}">-->
+        <!--<view class="zan-badge__count">{{messageCount}}</view>-->
+      <!--</view>-->
+
+      <!--<view class="zan-cell__bd">消息中心-->
+
+      <!--</view>-->
+      <!--<view class="zan-cell__ft">-->
+
+      <!--</view>-->
+    <!--</view>-->
+    <view class="zan-cell zan-cell--access" @tap="navigateToAddress">
+      <view class="zan-cell__bd">收货地址</view>
+      <view class="zan-cell__ft"></view>
+    </view>
+
+    <view class="zan-cell zan-cell--access">
+      <view class="zan-cell__bd">个人设置</view>
+      <view class="zan-cell__ft"></view>
+    </view>
+  </view>
+
+
+  <!--<view bindtap="navigateToShare" class="tableviewcell">-->
+    <!--<image src="../../../images/icon_share.png" />-->
+    <!--<text>扫码分享</text>-->
+  <!--</view>-->
+  <!--<view bindtap="navigateToAboutus" class="tableviewcell">-->
+    <!--<image src="../../../images/icon_aboutus.png" />-->
+    <!--<text>关于我们</text>-->
+  <!--</view>-->
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../../libs/av-weapp-min'
+  export default class Index  extends wepy.page {
+    config = {
+      navigationBarTitleText: '我的'
+    }
+
+    onShow() {
+      this.loadUser();
+      this.loadMessage();
+
+    }
+
+
+    loadMessage() {
+      // 获取当前用户的未读消息;
+      const self = this;
+      const user = AV.User.current();
+      const query = new AV.Query('MessageList');
+      query.equalTo('user', user);
+      let count = 0;
+      query.find().then(res=> {
+        //
+        res.map(item=> {
+          if(item.get('status') == false) {
+            ++count;
+          }
+        });
+        self.messageCount = count;
+        self.$apply();
+      });
+    }
+    // 每次用户进来都会保存一下当前用户的信息;
+    loadUser () {
+      var that = this;
+      // 获得当前登录用户
+      const user = AV.User.current();
+      // 调用小程序 API，得到用户信息
+      wx.getUserInfo({
+        success: ({userInfo}) => {
+          // 更新当前用户的信息，昵称头像等
+          console.log(userInfo)
+          user.set(userInfo).save().then(user => {
+            // 成功，此时可在控制台中看到更新后的用户信息
+            console.log(user)
+            that.userInfo = userInfo
+            that.$apply();
+          }).catch(console.error);
+        }
+      });
+    }
+
+
+    data = {
+      userInfo:{},
+      messageCount:0,
+    }
+    methods = {
+      // 跳转到对应的需求列表详情里面;
+
+      // 个人设置
+      navigateToMe() {
+        wx.navigateTo({
+          url: '../../user/personal'
+        });
+      },
+      // 消息历史
+      navigateToMessageHistory() {
+        wx.navigateTo({
+          url: '../../user/message'
+        });
+      },
+      // 需求发布
+      navigateToPublish: function () {
+        // 先看用户是否为当前的高级用户;
+        const user = new AV.User.current();
+        console.log(user)
+        if(user.get('type') == 'VIP') {
+          // 说明是高级用户 这个时候开业可以发布 否则就跳转到个人设置里面去;
+          wx.navigateTo({
+            url: '../../user/demandList'
+          });
+        }else {
+          // 提醒用户当前需要高级会员才可以：
+          wx.showToast({
+            title:'前往个人设置升级为VIP才可以'
+          });
+
+          // wx.navigateTo({
+          //   url: '../../user/personal'
+          // });
+        }
+
+      },
+      // 地址管理
+      navigateToAddress: function () {
+        wx.navigateTo({
+          url: '../../address/list'
+        });
+      },
+      // 我的所有订单
+      navigateToOrder: function (status) {
+        wx.navigateTo({
+          url: '../../order/list/list?status=' + status
+        });
+      },
+
+      chooseImage: function () {
+        var that = this;
+        wx.chooseImage({
+          count: 1, // 默认9
+          sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+          sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+          success: function (res) {
+            // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
+            var tempFilePath = res.tempFilePaths[0];
+            new AV.File('file-name', {
+              blob: {
+                uri: tempFilePath,
+              },
+            }).save().then(
+              // file => console.log(file.url())
+              function(file) {
+                // 上传成功后，将所上传的头像设置更新到页面<image>中
+                var userInfo = that.data.userInfo;
+                userInfo.avatarUrl = file.url();
+                that.setData({
+                  userInfo, userInfo
+                });
+              }
+            ).catch(console.error);
+          }
+        })
+      },
+      // 关于我们
+      navigateToAboutus: function () {
+        wx.navigateTo({
+          url: '/pages/member/aboutus/aboutus'
+        });
+      },
+      navigateToDonate: function () {
+        wx.navigateTo({
+          url: '/pages/member/donate/donate'
+        });
+      },
+      // 分享
+      navigateToShare: function () {
+        wx.navigateTo({
+          url: '/pages/member/share/share'
+        });
+      },
+    }
+    onLoad() {
+
+    }
+  }
+</script>

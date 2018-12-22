@@ -1,0 +1,104 @@
+<style lang="css">
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/cell.wxss';
+  @import '../../zanui/icon.wxss';
+  @import '../../zanui/btn.wxss';
+  @import '../../zanui/col.wxss';
+  .field__title--radius {
+    padding-bottom: 10px;
+  }
+</style>
+
+<template>
+  <!-- 表单填写-->
+  <view class="zan-panel">
+    <view class="zan-cell">
+      <view class="zan-col zan-col-16">
+        <input type="text" bindinput="getSearchKey" placeholder="请输入关键字" />
+      </view>
+      <view class="zan-col zan-col-2" @tap="searchKeyWord()">
+        <view class="zan-icon zan-icon-search"></view>
+
+      </view>
+      <view class="zan-col zan-col-6" >
+        <view class="zan-icon zan-icon-add-o">
+
+        </view>
+        <view class="" style="display:inline-block;">新增需求</view>
+      </view>
+    </view>
+
+
+    <view class="zan-cell" @tap="toHref({{item.objectId}})" wx:for="{{publishList}}" wx:key="index">
+      <view class="zan-cell__bd">
+        {{item.title}}
+        <view class="zan-cell__desc">{{item.desc}}</view>
+      </view>
+    </view>
+
+    <!-- 暂无数据 -->
+
+  </view>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  import AV from '../../libs/av-weapp-min'
+  export default class PublishList  extends wepy.page {
+    config = {
+      navigationBarTitleText: '我的需求列表'
+    }
+
+    data = {
+      publishList:[],
+      searchKey:'',
+    }
+
+    components = {
+
+    }
+
+    methods = {
+      getSearchKey(e) {
+        this.searchKey = e.detail.value;
+        this.$apply();
+      },
+      searchKeyWord() {
+        // 开始请求数据：
+        const self = this;
+        let queryDemandList = new AV.Query('Demand');
+        let key = this.searchKey;
+        queryDemandList.contains("title","" + key);// 增加key的搜索条件;
+
+        queryDemandList.descending('createdAt');
+        // 按照时间排列
+        queryDemandList.find().then(res=> {
+          self.publishList = res;
+          self.$apply();
+        }, error=> {
+          console.log(error)});
+
+      },
+      toHref(id) {
+        wx.navigateTo({
+          url:'../user/desc?id=' + id
+          // url: '../../user/publish'
+        });
+      }
+    }
+    onLoad() {
+      // 开始请求数据：
+      const self = this;
+      let queryDemandList = new AV.Query('Demand');
+      queryDemandList.descending('createdAt');
+      // 按照时间排列
+      queryDemandList.find().then(res=> {
+        self.publishList = res;
+        self.$apply();
+      }, error=> {
+        console.log(error)});
+    }
+  }
+</script>

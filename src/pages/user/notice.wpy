@@ -1,0 +1,84 @@
+<style>
+
+</style>
+
+<template>
+  <form bind:submit="testSubmit" report-submit="true">
+    <button formType="submit">发送模板消息</button>
+  </form>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+  export default class Notice  extends wepy.page {
+    config = {
+      navigationBarTitleText: '消息通知测试'
+    }
+    data = {
+      openid: null,
+    }
+    methods = {
+      testSubmit:function(e) {
+        // 先获取对应的token 值
+        var self = this;
+        // 获去openid
+
+        // wx12dcdb427e767e49 wxc5ede087b54c2d2b
+        // c0967df34e7fbc53c8a9c31c15681329 5e0c4d6c57dea46aafd46e375e6b936f
+        const APPID = 'wx12dcdb427e767e49', APPSECRET = 'c0967df34e7fbc53c8a9c31c15681329';
+
+        let tokenUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' + APPID +'&secret=' + APPSECRET;
+        wx.request({
+          url: tokenUrl,
+          method: 'GET',
+          success: function(res) {
+
+            const _access_token = res.data.access_token;
+
+            let openid = self.openid;
+            let url = 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send?access_token=' + _access_token
+            ;
+            let _jsonData = {
+              access_token: _access_token,
+              touser: openid,
+              template_id: 'uIMT6GLuQ9xxjAVK0uigBt24uoxupHz7hWpWlPXdraE', // 申请的模板id
+              form_id: e.detail.formId,
+              page: "pages/user/notice", // 跳转到的页面;
+              data: {
+                "keyword1": {"value": "测试数据一", "color": "#173177"},
+                "keyword2": {"value": "测试数据二", "color": "#173177"},
+                "keyword3": {"value": "测试数据三", "color": "#173177"},
+                "keyword4": {"value": "测试数据四", "color": "#173177"},
+              }
+            }
+            wx.request({
+              url: url,
+              data: _jsonData,
+              method: 'POST',
+              success: function (res) {
+                // 表示跳转成功;
+              },
+              fail: function (err) {
+                console.log('request fail ', err);
+              },
+              complete: function (res) {
+                console.log("request completed!");
+              }
+
+            })
+          },
+          error: function(error) {
+            console.log(error)
+          }
+        });
+
+
+      }
+    }
+    onLoad() {
+      const user = AV.User.current();
+      this.openid = user.get('authData')['lc_weapp']['openid'];
+    }
+  }
+</script>

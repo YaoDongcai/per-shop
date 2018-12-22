@@ -1,0 +1,79 @@
+<style lang="css">
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/cell.wxss';
+  @import '../../zanui/icon.wxss';
+  @import '../../zanui/btn.wxss';
+  .field__title--radius {
+    padding-bottom: 10px;
+  }
+.address-add {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+</style>
+
+<template>
+  <!-- 表单填写-->
+  <view class="zan-panel">
+    <view class="zan-cell" wx:for="{{publishList}}" wx:key="index">
+      <view class="zan-cell__bd">
+        {{item.title}}
+        <view class="zan-cell__desc">{{item.desc}}</view>
+      </view>
+      <!--<view class="zan-cell__ft">详细信息需求一封。。。。。。。。。。。。。。。。。</view>-->
+    </view>
+  </view>
+
+  <!-- 新建发布-->
+  <view @tap="add"  class="address-add">
+    <button class="zan-btn zan-btn--large zan-btn--primary zan-btn--plain" style="width:90%;margin-left:5%;margin-bottom:10px;">新建需求</button>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  import AV from '../../libs/av-weapp-min'
+  export default class PublishList  extends wepy.page {
+    config = {
+      navigationBarTitleText: '需求列表'
+    }
+
+    data = {
+      publishList:[]
+    }
+
+    components = {
+
+    }
+
+    methods = {
+      add() {
+        ///user/publish
+        wx.navigateTo({
+          url:'../user/publish'
+          // url: '../../user/publish'
+        });
+      }
+    }
+    onShow() {
+      // 查询我的需求表单详情;
+      const query = new AV.Query('Demand');
+
+      const user = new AV.User.current();
+      const self = this;
+      query.equalTo('user', user);
+      query.descending('createdAt');
+      query.find().then(res=> {
+        self.publishList = res;
+        self.$apply();
+      }, error=> {
+
+      });
+    }
+    onLoad() {
+
+    }
+  }
+</script>

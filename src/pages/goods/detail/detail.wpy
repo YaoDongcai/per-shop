@@ -1,0 +1,349 @@
+<style>
+  page {
+    background: #eee;
+  }
+
+  /*swiper images*/
+  .images {
+    position: relative;
+  }
+
+  .swiper-image {
+    width: 100%;
+    height: 100%;
+  }
+
+  /*contains title & price*/
+  .summary {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: white;
+    margin: 20rpx 0;
+  }
+
+  /*goods title*/
+  .title {
+    font-size: 34rpx;
+    margin: 10rpx;
+    line-height: 46rpx;
+  }
+
+  /*goods price*/
+  .price {
+    color: #f60;
+    margin: 10rpx;
+  }
+
+  /*详情图片底部边距*/
+  .detail {
+
+  }
+
+  .detail image{
+    width: 100%;
+  }
+
+  .footer {
+    background: #f9f9f9;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: fixed;
+    bottom: 0;
+  }
+
+  .add-cart {
+    float: right;
+    border: 0;
+    line-height: 100rpx;
+    text-align: center;
+    width: 350rpx;
+    height: 100rpx;
+    background-color: #f60;
+    color: white;
+    font-size: 36rpx;
+    border-radius: 0px;
+  }
+
+  /*购物车按钮、收藏等*/
+  .opt-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-around;
+  }
+
+  /*cart*/
+  .button-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .button-image {
+    width: 60rpx;
+    height: 60rpx;
+  }
+
+  .button-text {
+    font-size: 24rpx;
+    line-height: 40rpx;
+  }
+
+  .contact-button {
+    width: 60rpx;
+    height: 48rpx;
+    padding-top: 5px;
+  }
+
+  /*evaluate评价*/
+  .evaluate-container {
+    padding-bottom: 50px;
+  }
+
+  .evaluate {
+    background: white;
+    display: flex;
+    border-top: 1px solid #ddd;
+    padding: 10px 0;
+  }
+
+  /*头像*/
+  .evaluate .avatar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .evaluate .avatar image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 10px;
+  }
+
+  /*评价图片*/
+  .evaluate .main {
+    flex: 3;
+    font-size: 12px;
+    color: gray;
+  }
+
+  .evaluate .main .gallery {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .evaluate .main .gallery image {
+    display: block;
+    width: 80px;
+    height: 80px;
+  }
+
+  .evaluate .main .nickname {
+
+  }
+
+  .evaluate .main .content {
+    margin: 10px 0;
+    color: black;
+  }
+
+
+  @keyframes bounceIn {
+    from, 20%, 40%, 60%, 80%, to {
+      animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+    }
+
+    0% {
+      opacity: 0;
+      transform: scale3d(.3, .3, .3);
+    }
+
+    20% {
+      transform: scale3d(1.1, 1.1, 1.1);
+    }
+
+    40% {
+      transform: scale3d(.9, .9, .9);
+    }
+
+    60% {
+      opacity: 1;
+      transform: scale3d(1.03, 1.03, 1.03);
+    }
+
+    80% {
+      transform: scale3d(.97, .97, .97);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale3d(1, 1, 1);
+    }
+  }
+
+  .bounceIn {
+    animation-name: bounceIn;
+    animation-duration: 1.25s;
+  }
+</style>
+
+<template>
+  <swiper class="images" indicator-dots="true"
+          autoplay="true" interval="5000" duration="1000" style="height:{{galleryHeight}}px;">
+    <block wx:for="{{goods.images}}" wx:key="">
+      <swiper-item>
+        <image src="{{item}}" mode="aspectFill" class="swiper-image" bindtap="previewImage" data-current="{{index}}"/>
+      </swiper-item>
+    </block>
+  </swiper>
+
+  <view class="summary">
+    <text class="title">{{goods.title}}</text>
+    <text class="price">￥ {{goods.price}}</text>
+  </view>
+
+  <view class="detail">
+    <image wx:for="{{goods.detail}}" src="{{item}}" wx:key="" mode="widthFix"></image>
+  </view>
+
+  <!-- 用户评价 -->
+  <view class="evaluate-container">
+    <view wx:for="{{evaluateObjects}}" class="evaluate" wx:for-item="evaluate">
+      <view class="avatar">
+        <image src="{{evaluate.user.avatarUrl}}" />
+      </view>
+      <view class="main">
+        <view class="nickname">{{evaluate.user.nickName}}</view>
+        <view class="content">{{evaluate.content}}</view>
+        <view class="gallery">
+          <view class="image-container" wx:for="{{evaluate.images}}" wx:for-item="url">
+            <image src="{{url}}" />
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer">
+    <view class="opt-buttons">
+      <view class="button-group" @tap="showCart">
+        <image src="../../../images/icon_cart.png" class="button-image {{animate}}" />
+        <text class="button-text">购物车</text>
+      </view>
+      <view class="button-group" @tap="">
+
+        <contact-button class="contact-button" size="22" />
+        <text class="button-text">联系客服</text>
+      </view>
+    </view>
+    <button class="add-cart" @tap="addCart">加入购物车</button>
+  </view>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../../libs/av-weapp-min'
+  export default class detail extends wepy.page {
+    config = {
+      navigationBarTitleText: '物品详情'
+    }
+    data = {
+      galleryHeight:200,
+      goods:{},
+      current: 0,
+      animate:''
+    }
+    showCartToast() {
+      wx.showToast({
+        title: '已加入购物车',
+        icon: 'success',
+        duration: 1000
+      });
+    }
+    methods = {
+      showCart: function () {
+        wx.switchTab({
+          url: '../../cart/cart'
+        });
+      },
+      addCart() {
+        var that = this;
+        // add cart
+        var user = AV.User.current();
+        // search if this goods exsit or not.if did exsit then quantity ++ updated cart object;
+        // if not, create cart object
+        // query cart
+        var goods = that.goods;
+        that.animate='';
+        that.$apply();
+        var query = new AV.Query('Cart');
+        query.equalTo('user', user);
+        query.equalTo('goods', goods);
+        // if count less then zero
+        query.count().then(function (count) {
+          if (count <= 0) {
+            that.animate = 'bounceIn';
+            // if didn't exsit, then create new one
+            var cart = AV.Object('Cart');
+            cart.set('user', user);
+            cart.set('quantity', 1);
+            cart.set('goods', goods);
+            that.$apply();
+            cart.save().then(function(cart){
+              that.showCartToast();
+            },function(error) {
+              console.log(error);
+            });
+          } else {
+            // if exsit, get the cart self
+            query.first().then(function(cart){
+              // update quantity
+              cart.increment('quantity', 1);
+              // atom operation
+              // cart.fetchWhenSave(true);
+              that.animate = 'bounceIn';
+              that.$apply();
+              that.showCartToast();
+              return cart.save();
+            }, function (error) {
+              console.log(error);
+            });
+          }
+        }, function (error) {
+
+        });
+      },
+
+      previewImage: function (e) {
+        wx.previewImage({
+          //从<image>的data-current取到current，得到String类型的url路径
+          current: this.goods.get('images')[parseInt(e.currentTarget.dataset.current)],
+          urls: this.goods.get('images') // 需要预览的图片http链接列表
+        })
+      },
+    }
+    getGoodsById(goodsId) {
+      const that = this;
+      var query = new AV.Query('Goods');
+      query.get(goodsId).then(goods=> {
+        that.goods = goods;
+        console.log(goods)
+        that.$apply();
+      });
+    }
+    getEvaluateByGoods(goodsId){
+      //用户评价
+    }
+    onLoad(options) {
+      const that = this;
+      var goodsId = options.objectId;
+      this.getGoodsById(goodsId);
+      this.getEvaluateByGoods(goodsId);
+    }
+  }
+</script>

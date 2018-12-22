@@ -1,0 +1,169 @@
+<style>
+  @import '../../../zanui/btn.wxss';
+  @import '../../../zanui/panel.wxss';
+  @import '../../../zanui/cell.wxss';
+  @import '../../../zanui/icon.wxss';
+  @import '../../../zanui/card.wxss';
+  @import '../../../zanui/color.wxss';
+
+</style>
+
+<template>
+
+  <view class="zan-panel" wx:for="{{orders}}">
+    <view class="zan-cell">
+      <view class="zan-card" wx:for="{{mappingData[index]}}" wx:for-item="mapping" wx:key="" class="carts-item" @tap="showGoods({{mapping.objectId}})">
+        <!-- 图片预览 -->
+        <view class="zan-card__thumb">
+          <image class="zan-card__img"
+                 src="{{mapping.avatar}}"
+                 mode="aspectFit"
+          />
+        </view>
+
+        <view class="zan-card__detail">
+          <view class="zan-card__detail-row">
+            <view class="zan-card__right-col">¥ {{mapping.price}}</view>
+            <view class="zan-card__left-col zan-ellipsis--l2">
+              {{mapping.title}}
+            </view>
+          </view>
+
+          <view class="zan-card__detail-row zan-c-gray-darker">
+            <view class="zan-card__right-col">x{{mapping.quantity}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="zan-cell">
+      <view class="zan-cell__bd">配送方式</view>
+      <view class="zan-cell__ft">免运费</view>
+    </view>
+    <view class="zan-cell">
+      <view class="zan-cell__bd">商品总金额</view>
+      <view class="zan-cell__ft">
+        <view style="color:red;">
+          ￥{{item.amount}}
+        </view>
+      </view>
+    </view>
+    <view class="zan-cell">
+      <view class="zan-cell__bd">收货地址</view>
+      <view class="zan-cell__ft">
+        {{addressArray[index]}}
+      </view>
+    </view>
+
+    <view class="zan-cell">
+      <view class="zan-cell__bd">订单时间</view>
+      <view class="zan-cell__ft">
+        {{item.createdAt}}
+      </view>
+    </view>
+    <view class="zan-cell" style="width:50%;margin-left:25%;" wx:if="{{status == 0}}">
+      <view class="zan-btn zan-btn--primary">
+        立即支付
+      </view>
+    </view>
+    <view class="zan-cell " style="width:50%;margin-left:25%;" wx:if="{{status == 2}}">
+      <view class="zan-btn zan-btn--primary">
+        确认收货
+      </view>
+    </view>
+    <view class="zan-cell " style="width:50%;margin-left:25%;" wx:if="{{status == 3}}">
+      <view class="zan-btn zan-btn--primary">
+        立即评价
+      </view>
+    </view>
+  </view>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../../libs/av-weapp-min'
+  export default class List  extends wepy.page {
+    config = {
+      navigationBarTitleText: '我的订单'
+    }
+    data = {
+      orders: [],
+      mappingData:[],
+      addressArray:[],
+      status:'',
+    }
+    methods = {
+
+    }
+    reloadData() {
+      var that = this;
+      var user = AV.User.current();
+      var query = new AV.Query('Order');
+      query.include('buys');
+      query.include('address');
+      query.equalTo('user', user);
+      query.equalTo('status', this.status);
+      query.descending('createdAt');
+      query.find().then(function (orderObjects) {
+
+        that.orders = orderObjects
+
+        // 存储地址字段
+        for (var i = 0; i < orderObjects.length; i++) {
+          var address = orderObjects[i].get('address');
+          // i为0是，左值为false故取右值，i>=0时，左值为true故取左值
+          var addressArray = that.addressArray || [];
+          addressArray.push(address);
+
+          that.addressArray = addressArray
+        }
+        for (var i = 0; i < orderObjects.length; i++) {
+          var order = orderObjects[i];
+          var queryMapping = new AV.Query('OrderGoodsMap');
+          queryMapping.include('goods');
+          queryMapping.equalTo('order', order);
+          queryMapping.find().then(function (mappingObjects) {
+            var mappingArray = [];
+            for (var j = 0; j < mappingObjects.length; j++) {
+              var mappingObject = mappingObjects[j];
+              var mapping = {
+                objectId: mappingObject.get('goods').get('objectId'),
+                avatar: mappingObject.get('goods').get('avatar'),
+                title: mappingObject.get('goods').get('title'),
+                price: mappingObject.get('goods').get('price'),
+                quantity: mappingObject.get('quantity')
+              };
+              mappingArray.push(mapping);
+            }
+            // 找出orderObjectId所在的索引位置，来得到k的值
+            var k = 0;
+            var orders = that.orders;
+
+            for (var index = 0; index < orders.length; index++) {
+              var order = orders[index];
+              if (order.get('objectId') == mappingObject.get('order').get('objectId')) {
+                k = index;
+                break;
+              }
+            }
+
+            var mappingData = that.mappingData == undefined ? [] : that.mappingData;
+            mappingData[k] = mappingArray;
+
+            that.mappingData = mappingData
+            that.$apply();
+          });
+        }
+      });
+    }
+    onLoad(options) {
+      // 订单状态，已下单为0，已付为1，已发货为2，已收货为3
+      var status = parseInt(options.status);
+      // 存为全局变量，控制支付按钮是否显示
+      this.status = status
+    }
+    onShow() {
+      this.reloadData();
+    }
+  }
+</script>

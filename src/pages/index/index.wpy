@@ -1,0 +1,326 @@
+<style lang="css">
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/cell.wxss';
+  @import '../../zanui/icon.wxss';
+  @import '../../zanui/row.wxss';
+  @import '../../zanui/col.wxss';
+  @import '../../zanui/color.wxss';
+  page {
+    background: white;
+  }
+
+  .swiper-image {
+    width: 100%;
+    height: 100%;
+  }
+
+  /*功能区*/
+  .func-area {
+    display: flex;
+    flex-direction: row;
+    margin: 20rpx 0;
+    padding-top: 30rpx;
+    background: white;
+  }
+
+  .func-area view {
+    width: 50%;
+    text-align: center;
+  }
+
+  .func-area text{
+    display: block;
+    color: #333;
+    font-size: 36rpx;
+    line-height: 90rpx;
+  }
+
+  .func-area image {
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: 20rpx;
+  }
+
+  .orange {
+    background: #f60;
+  }
+
+  .blue {
+    background: #09f;
+  }
+
+  /*主商品区*/
+  .container-goods {
+    background: white;
+  }
+
+  .container-goods .caption {
+    font-size: 32rpx;
+    height:80rpx;
+    width: 100%;
+    text-align: center;
+    line-height: 80rpx;
+    text-indent: 20rpx;
+    padding: 10rpx;
+  }
+
+  .main-goods {
+    /*	display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+
+    */	border-top: 1px solid #eee;
+    background: white;
+    display: inline-block;
+  }
+
+  .main-goods .single-goods {
+    display: block;
+    float: left;
+    width: 50%;
+  }
+
+  .main-goods image {
+    width: 220rpx;
+    height: 220rpx;
+    display: block;
+    margin: 20rpx auto;
+  }
+
+  .main-goods .title {
+    display: block;
+    width: 90%;
+    color: #999;
+    font-size: 28rpx;
+    margin: 10rpx 6rpx;
+    height: 60rpx;
+    line-height: 32rpx;
+    overflow: hidden;
+  }
+
+  .main-goods .summary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .main-goods .summary text {
+    font-size: 28rpx;
+    margin: 10rpx 20rpx;
+  }
+
+  .main-goods .summary .price {
+    color: red;
+  }
+
+  .main-goods .summary .sale {
+    color: gray;
+  }
+  .icon-wrap {
+    height: 80px;
+    text-align: center;
+  }
+  .icon-classname {
+    color: #999;
+    font-size: 15px;
+  }
+  .zan-icon {
+    font-size: 30px;
+    margin: 5px;
+  }
+</style>
+<template>
+  <swiper indicator-dots="true"
+          autoplay="true" interval="5000" duration="1000" style="height:{{bannerHeight}}px;">
+    <block wx:for="{{banner}}" wx:key="">
+      <swiper-item>
+        <image src="{{item}}" mode="aspectFill" class="swiper-image" @tap="showGoods"/>
+      </swiper-item>
+    </block>
+  </swiper>
+  <!--<view class="zan-panel">-->
+    <!--<view class="zan-row">-->
+      <!--<view class="zan-col zan-col-12" >-->
+        <!--<view class="icon-wrap " @tap="showDemandList">-->
+          <!--<view class="zan-icon zan-icon-description zan-c-green"  ></view>-->
+          <!--<view class="icon-classname zan-c-green">需求发布与对接</view>-->
+        <!--</view>-->
+
+        <!--&lt;!&ndash; 出现最新的5条需求信息&ndash;&gt;-->
+        <!--<view class="zan-cell zan-cell&#45;&#45;access" @tap="toHref({{item.objectId}})"  wx:for="{{demandList}}" wx:key="index">-->
+          <!--<view class="zan-cell__bd">{{item.title}}</view>-->
+          <!--<view class="zan-cell__ft"></view>-->
+        <!--</view>-->
+
+      <!--</view>-->
+      <!--<view class="zan-col zan-col-12" >-->
+        <!--<view class="icon-wrap " @tap="showCategories">-->
+          <!--<view class="zan-icon zan-icon-description zan-c-blue"></view>-->
+          <!--<view class="icon-classname zan-c-blue">设备租赁服务</view>-->
+        <!--</view>-->
+        <!--&lt;!&ndash;<view class="icon-wrap " @tap="showOrders">&ndash;&gt;-->
+          <!--&lt;!&ndash;<view class="zan-icon zan-icon-pending-orders zan-c-blue"  ></view>&ndash;&gt;-->
+          <!--&lt;!&ndash;<view class="icon-classname zan-c-blue">我的订单</view>&ndash;&gt;-->
+        <!--&lt;!&ndash;</view>&ndash;&gt;-->
+      <!--</view>-->
+    <!--</view>-->
+  <!--</view>-->
+  <!-- hot goods -->
+  <!--<view class="zan-panel">-->
+    <!--<view class="zan-panel-title">-->
+      <!--热卖推荐-->
+    <!--</view>-->
+  <!--</view>-->
+  <view class="container-goods">
+    <view class="caption">热卖推荐</view>
+    <view class="main-goods">
+      <view class="single-goods" wx:for="{{goods}}" wx:key="" @tap="showDetail({{index}})" >
+        <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+        <text class="title">{{item.title}}</text>
+        <view class="summary">
+          <text class="price">￥{{item.price}}</text>
+          <!--<text class="sale">已售99件</text>-->
+        </view>
+      </view>
+    </view>
+  </view>
+
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  import AV from '../../libs/av-weapp-min'
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '首页'
+    }
+    components = {
+
+    }
+
+    data = {
+      userInfo:null,
+      demandList: [],
+      banner:[],// 广告位
+      goods:[], // 商品
+      bannerHeight:200,
+    }
+
+    computed = {
+
+    }
+
+    methods = {
+      toHref(id) {
+        wx.navigateTo({
+          url:'../user/desc?id=' + id
+          // url: '../../user/publish'
+        });
+      },
+      showDemandList() {
+        wx.navigateTo({
+          url: "../user/list"
+        });
+      },
+      showDetail: function (index) {
+        var goodsId = this.goods[index].id;
+        wx.navigateTo({
+          url: "../goods/detail/detail?objectId=" + goodsId
+        });
+      },
+      showCategories: function () {
+        wx.switchTab({
+          url: "../category/category"
+        });
+      },
+      showOrders: function () {
+        wx.navigateTo({
+          url: "../order/list/list?status=1"
+        });
+      },
+      showGoods: function () {
+//        wx.navigateTo({
+//          url: '../goods/detail/detail?objectId=5816e3b22e958a0054a1d711'
+//        });
+      }
+    }
+
+    events = {
+
+    }
+    loadBanner() {
+      // 开始请求图片
+      var that = this;
+      var query = new AV.Query('Banner');
+      // query.include('image');
+      query.find().then(function (bannerObjects) {
+        var banner = [];
+        for (var i = 0; i < bannerObjects.length; i++) {
+          that.banner.push((bannerObjects[i].get("url")));
+        }
+        that.$apply();
+      });
+    }
+    loadMainGoods() {
+      var that = this;
+      var query = new AV.Query('Goods');
+      query.equalTo('isHot', true);
+      query.find().then(function (goodsObjects) {
+        that.goods = goodsObjects;
+        that.$apply();
+      });
+    }
+    getInviteCode(options) {
+      if (options.uid != undefined) {
+        wx.showToast({
+          title: '来自用户:' + options.uid + '的分享',
+          icon: 'success',
+          duration: 2000
+        })
+      }
+    }
+    /**
+     * 分享
+     * @returns {{title: string, desc: string, path: string}}
+     */
+    onShareAppMessage() {
+      return {
+        title: 'Per-shop线上商城',
+        desc: '一个基于LeanCloud开发的电商系统',
+        path: '/pages/index/index?uid=4719784'
+      }
+    }
+    loadDemandList() {
+      // 获取当前的5条最新的需求列表;
+      const self = this;
+      let queryDemandList = new AV.Query('Demand');
+      queryDemandList.descending('createdAt');
+      queryDemandList.limit(5);
+      // 按照时间排列
+      queryDemandList.find().then(res=> {
+        self.demandList = res;
+        self.$apply();
+      }, error=> {
+        console.log(error)});
+    }
+    onShow() {
+      this.loadDemandList();
+
+    }
+    onLoad(options) {
+      let self = this;
+      self.loadBanner();
+      self.loadMainGoods();
+      self.getInviteCode(options);
+//      this.$parent.getUserInfo(function (userInfo) {
+//        if(userInfo) {
+//          self.userInfo = userInfo
+//          self.$apply()
+//        }
+//
+//      })
+    }
+  }
+</script>

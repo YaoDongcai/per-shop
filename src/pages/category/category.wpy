@@ -1,0 +1,363 @@
+<style lang="css">
+  @import '../../zanui/panel.wxss';
+  @import '../../zanui/cell.wxss';
+  @import '../../zanui/icon.wxss';
+  @import '../../zanui/row.wxss';
+  @import '../../zanui/col.wxss';
+  @import '../../zanui/color.wxss';
+  /*页面背景*/
+  page {
+    background-color: white;
+  }
+  /*主商品区*/
+  .container-goods {
+    background: white;
+  }
+
+  .container-goods .caption {
+    font-size: 32rpx;
+    height:80rpx;
+    width: 100%;
+    text-align: center;
+    line-height: 80rpx;
+    text-indent: 20rpx;
+    padding: 10rpx;
+  }
+
+  .main-goods {
+    background: white;
+    display: inline-block;
+  }
+
+  .main-goods .single-goods {
+    display: block;
+    float: left;
+    width: 50%;
+  }
+
+  .main-goods image {
+    width: 220rpx;
+    height: 220rpx;
+    display: block;
+    margin: 20rpx auto;
+  }
+
+  .main-goods .title {
+    display: block;
+    width: 90%;
+    color: #999;
+    font-size: 28rpx;
+    margin: 10rpx 6rpx;
+    height: 60rpx;
+    line-height: 32rpx;
+    overflow: hidden;
+  }
+
+  .main-goods .summary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .main-goods .summary text {
+    font-size: 28rpx;
+    margin: 10rpx 20rpx;
+  }
+
+  .main-goods .summary .price {
+    color: red;
+  }
+
+  .main-goods .summary .sale {
+    color: gray;
+  }
+  /*容器总体布局为左右两列*/
+  .container {
+    display: flex;
+    flex-direction: row;
+  }
+
+  /*侧边栏顶级分类给予固定宽度*/
+  .sidebar {
+    width: 120px;
+    border-top: 1px solid #e5e5e5;
+  }
+
+  /*text块状布局独占一行*/
+  .sidebar text {
+    display: block;
+    border: 1px solid #e5e5e5;
+    border-top: 0;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    color: #232626;
+    font-size: 14px;
+    background-color: #fff;
+  }
+
+  /*hight light*/
+  .sidebar text.highlight {
+    background-color: #f3f5f7;
+    color: #f23131;
+    border-right: 0;
+  }
+
+  .main {
+    width: 100%;
+    margin-left: 5px;
+    margin-right: 5px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /*category banner*/
+  .banner {
+    width: 100%;
+    /*margin: 20rpx 0;*/
+  }
+
+  /*网格布局子类九宫格分布*/
+  .gridview {
+    background-color: #fff;
+    height: 80%;
+  }
+
+  /*向左流动*/
+  .gridview dl {
+    float: left;
+    margin: 5px;
+  }
+
+  /*图片*/
+  .gridview dt image {
+    width: 75px;
+    height: 75px;
+  }
+
+  /*文字*/
+  .gridview dd text {
+    color: #6c6c6c;
+    font-size: 12px;
+    text-align: center;
+    display: block;
+    line-height: 20px;
+  }
+
+ .zan-panel {
+   margin-top:0px;
+   border-top:none;
+ }
+  .zan-tab__bd {
+    border-bottom:none;
+  }
+</style>
+
+<template>
+
+  <view >
+    <zanTab1 :tab.sync="tab1" componentId="tab1"></zanTab1>
+  </view>
+    <!-- 如果是当前进入的数据 表示为icon-->
+  <view class="zan-panel">
+
+    <view class="container-goods">
+      <view class="main-goods">
+        <view class="single-goods" wx:for="{{subCategories}}" wx:key="" @tap="avatarTap({{item.objectId}})" >
+          <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <text class="title zan-ellipsis">{{item.title}}</text>
+          <view class="summary">
+            <text class="price">￥{{item.price}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import AV from '../../libs/av-weapp-min'
+  import zanTab from '../../components/zan-tab'
+
+  /**
+   * 全部分类项目
+   */
+  export default class Category  extends wepy.page {
+    config = {
+      navigationBarTitleText: '全部',
+      enablePullDownRefresh:true
+    }
+    onPullDownRefresh() {
+      var that = this;
+
+      var category = AV.Object.createWithoutData('Category', '5b1e10c867f3560035fa0230');// 表示为吉他
+      // 这个时候需要去Query里面选择数据;
+      var goods = new AV.Query('Goods');
+      // 找到物品为vategory里面的数据;
+      goods.equalTo('category',category);
+      goods.find().then(res=> {
+        console.log(res)
+        that.subCategories = res;
+        that.$apply();
+        wx.stopPullDownRefresh();
+      },error=> {
+        wx.stopPullDownRefresh();
+      });
+    }
+    components = {
+      zanTab1: zanTab,
+
+    }
+    data = {
+      topCategories: [],
+      subCategories: [],
+      imageWidth:null,
+      sidebarHeight:null,
+      highlight:['highlight','',''],
+      banner: '',
+
+      objectId:null,
+      type: 'guitar',
+      tab1: {
+        list:[
+          {
+            id:'guitar',
+            title:'吉他'
+          },{
+            id:'Ukulele',
+            title:'尤克里里'
+          }
+        ],
+        selectedId: 'guitar',
+        scroll: false
+      }
+    }
+    events = {
+      zanTabChange(selectedId, event) {
+        var self = this;
+        var id = null;
+        let {componentId} = event.source
+        this[componentId].selectedId = selectedId
+        // 当前tab切换的时候
+        switch (selectedId) {
+
+          case 'guitar':
+            self.type = 'guitar';
+            id = '5b1e10c867f3560035fa0230';
+            break;
+          default:
+            self.type = 'Ukulele';
+            id = '5b1e10ddac502e003d6ad442';
+        }
+
+        var category = AV.Object.createWithoutData('Category', id);// 表示为吉他
+        // 这个时候需要去Query里面选择数据;
+        var goods = new AV.Query('Goods');
+        // 找到物品为vategory里面的数据;
+        goods.equalTo('category',category);
+        goods.find().then(res=> {
+          self.subCategories = res;
+          self.$apply();
+        },error=> {
+
+        });
+      }
+    }
+
+    methods = {
+      avatarTap(objectId) {
+        wx.navigateTo({
+          url: "../goods/detail/detail?objectId=" + objectId
+        });
+      },
+      tapTopCategory(objectId, index){
+        console.log(objectId)
+        // 查询父级分类下的所有子类
+        var parent = AV.Object.createWithoutData('Category', objectId);
+        this.getCategory(parent);
+      },
+      // 详情页
+      showGoods () {
+        wx.navigateTo({
+          url: '../goods/detail/detail?objectId=5816e3b22e958a0054a1d711'
+        });
+      }
+    }
+    onLoad() {
+      var that = this;
+
+      var category = AV.Object.createWithoutData('Category', '5b1e10c867f3560035fa0230');// 表示为吉他
+      // 这个时候需要去Query里面选择数据;
+      var goods = new AV.Query('Goods');
+      // 找到物品为vategory里面的数据;
+      goods.equalTo('category',category);
+      goods.find().then(res=> {
+        console.log(res)
+        that.subCategories = res;
+        that.$apply();
+      },error=> {
+
+      });
+    }
+    getCategory(parent){
+      var that = this;
+      var query = new AV.Query('Category');
+      // 查询顶级分类，设定查询条件parent为null
+      query.equalTo('parent',parent);
+      query.ascending('index');
+      query.find().then(function (categories) {
+        if (parent){
+
+          that.subCategories = categories
+          that.$apply();
+        }else{
+
+          that.topCategories = categories
+          that.$apply();
+        }
+      }).catch(function(error) {
+      });
+    }
+    setHighlight(index){
+      var highlight = [];
+      for (var i = 0; i < this.topCategories; i++) {
+        highlight[i] = '';
+      }
+      highlight[index] = 'highlight';
+      this.highlight = highlight
+      this.$apply();
+    }
+    setImageWidth () {
+      var that = this;
+      wx.getSystemInfo({
+        success: function (res) {
+          var screenWidth = res.screenWidth;
+
+          var imageWidth = (screenWidth - 120) / 2 - 5;
+          that.imageWidth = imageWidth
+          that.$apply();
+        }
+      })
+
+    }
+    setSideHeight () {
+      var that = this;
+      wx.getSystemInfo({
+        success: function (res) {
+          var sidebarHeight = res.screenHeight;
+
+          that.sidebarHeight = sidebarHeight;
+          that.$apply();
+        }
+      })
+    }
+    getBanner (parent) {
+      var that = this;
+      parent.fetch().then(function () {
+        that.banner = parent.get('banner');
+        that.$apply();
+      });
+    }
+  }
+</script>
